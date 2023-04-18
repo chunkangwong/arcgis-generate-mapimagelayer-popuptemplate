@@ -52,7 +52,7 @@ view.whenLayerView(mapImageLayer).then(async () => {
 
     const a = document.createElement("a");
     a.href = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(popupTemplate)
+      JSON.stringify(popupTemplate, null, 4)
     )}`;
     a.download = "popupTemplate.json";
     a.click();
