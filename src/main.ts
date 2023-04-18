@@ -5,15 +5,15 @@ import MapView from "@arcgis/core/views/MapView";
 import LayerList from "@arcgis/core/widgets/LayerList";
 import "./style.css";
 
+const mapImageLayerUrl =
+  "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer";
+
 const downloadIcon = document.createElement("span");
 downloadIcon.classList.add("esri-icon", "esri-icon-duplicate");
 downloadIcon.setAttribute("title", "Download Popup Template");
 
 const loadingIcon = document.createElement("span");
 loadingIcon.classList.add("esri-icon", "esri-icon-loading-indicator");
-
-const mapImageLayerUrl =
-  "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer";
 
 const mapImageLayer = new MapImageLayer({
   url: mapImageLayerUrl,
