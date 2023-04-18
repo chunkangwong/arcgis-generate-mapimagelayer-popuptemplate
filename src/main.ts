@@ -89,15 +89,14 @@ const generatePopupTemplate = async (url: string, id?: number) => {
       },
     };
   }
-  return Promise.all(
-    sublayers.map(async (sublayer: any) => {
-      const popupTemplates = await generatePopupTemplate(url, sublayer.id);
-      return {
-        title: layer.name || layer.mapName,
-        visible: layer.defaultVisibility,
-        id: layer.id,
-        subLayers: popupTemplates,
-      };
-    })
-  );
+  return {
+    title: layer.name || layer.mapName,
+    visible: layer.defaultVisibility,
+    id: layer.id,
+    subLayers: await Promise.all(
+      sublayers.map(
+        async (sublayer: any) => await generatePopupTemplate(url, sublayer.id)
+      )
+    ),
+  };
 };
