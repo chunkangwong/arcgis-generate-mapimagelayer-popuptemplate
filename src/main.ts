@@ -4,14 +4,19 @@ import esriRequest from "@arcgis/core/request";
 import MapView from "@arcgis/core/views/MapView";
 import LayerList from "@arcgis/core/widgets/LayerList";
 import "./style.css";
-import config from "./sample/config.json";
+
+const downloadIcon = document.createElement("span");
+downloadIcon.classList.add("esri-icon", "esri-icon-duplicate");
+downloadIcon.setAttribute("title", "Download Popup Template");
+
+const loadingIcon = document.createElement("span");
+loadingIcon.classList.add("esri-icon", "esri-icon-loading-indicator");
 
 const mapImageLayerUrl =
-  "https://geriapp.esrisa.com/swa/rest/services/NEWater_Network/MapServer";
+  "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer";
 
 const mapImageLayer = new MapImageLayer({
   url: mapImageLayerUrl,
-  sublayers: config.subLayers,
 });
 
 const map = new Map({
@@ -22,8 +27,8 @@ const map = new Map({
 const view = new MapView({
   container: "viewDiv",
   map: map,
-  center: [103.78, 1.34],
-  zoom: 12,
+  center: [-98.5795, 39.8282],
+  zoom: 4,
 });
 
 const layerList = new LayerList({
@@ -33,9 +38,29 @@ const layerList = new LayerList({
 view.ui.add(layerList, "top-right");
 
 view.whenLayerView(mapImageLayer).then(async () => {
-  console.log("loading...");
-  const popupTemplate = await generatePopupTemplate(mapImageLayerUrl);
-  console.log(popupTemplate);
+  const btn = document.createElement("div");
+  btn.classList.add("esri-widget", "esri-widget--button", "esri-interactive");
+  btn.appendChild(downloadIcon);
+
+  view.ui.add(btn, "top-left");
+
+  btn.addEventListener("click", async () => {
+    btn.innerHTML = "";
+    btn.appendChild(loadingIcon);
+
+    const popupTemplate = await generatePopupTemplate(mapImageLayerUrl);
+
+    const a = document.createElement("a");
+    a.href = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(popupTemplate)
+    )}`;
+    a.download = "popupTemplate.json";
+    a.click();
+    a.remove();
+
+    btn.innerHTML = "";
+    btn.appendChild(downloadIcon);
+  });
 });
 
 const generatePopupTemplate = async (url: string, id?: number) => {
@@ -65,13 +90,14 @@ const generatePopupTemplate = async (url: string, id?: number) => {
     };
   }
   return Promise.all(
-    sublayers.map((sublayer: any) => generatePopupTemplate(url, sublayer.id))
-  ).then((popupTemplates) => {
-    return {
-      title: layer.name || layer.mapName,
-      visible: layer.defaultVisibility,
-      id: layer.id,
-      subLayers: popupTemplates,
-    };
-  });
+    sublayers.map(async (sublayer: any) => {
+      const popupTemplates = await generatePopupTemplate(url, sublayer.id);
+      return {
+        title: layer.name || layer.mapName,
+        visible: layer.defaultVisibility,
+        id: layer.id,
+        subLayers: popupTemplates,
+      };
+    })
+  );
 };

@@ -9,7 +9,20 @@ body,
   width: 100%;
 }
 
-#viewDiv,
-#tableDiv {
+#viewDiv {
   height: 100%;
+}
+
+.esri-icon-loading-indicator {
+  animation: spin-animation 1s infinite;
+  display: inline-block;
+}
+
+@keyframes spin-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
 }
