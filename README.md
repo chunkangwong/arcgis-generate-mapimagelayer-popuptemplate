@@ -2,7 +2,7 @@
 
 This sample demonstrates how to recursively query a layer and its nested sublayers to generate a popup template config for a MapImageLayer.
 
-# Instructions
+## Instructions
 
 1. Changed the following line to your own ArcGIS MapServer URL:
 
