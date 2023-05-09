@@ -48,7 +48,7 @@ view.whenLayerView(mapImageLayer).then(async () => {
     btn.innerHTML = "";
     btn.appendChild(loadingIcon);
 
-    const popupTemplate = await generatePopupTemplate(mapImageLayerUrl);
+    const popupTemplate = await generateMapLayers(mapImageLayerUrl);
 
     const a = document.createElement("a");
     a.href = `data:text/json;charset=utf-8,${encodeURIComponent(
@@ -63,11 +63,26 @@ view.whenLayerView(mapImageLayer).then(async () => {
   });
 });
 
-const generatePopupTemplate = async (url: string, id?: number) => {
-  const response = await esriRequest(`${url}/${id ?? ""}?f=json`);
+const generateMapLayers = async (url: string) => {
+  const response = await esriRequest(`${url}/?f=json`);
+  const layers = response.data;
+  const sublayers = (layers.layers || layers.subLayers).filter(
+    (layer: { parentLayerId: number }) => layer.parentLayerId === -1
+  );
+
+  return await Promise.all(
+    sublayers.map(async (layer: { id: number }) => {
+      return await generatePopupTemplate(url, layer.id);
+    })
+  );
+};
+
+const generatePopupTemplate = async (url: string, id: number) => {
+  const response = await esriRequest(`${url}/${id}?f=json`);
   const layer = response.data;
   const sublayers = layer.layers || layer.subLayers;
   if (!sublayers || sublayers.length === 0) {
+    console.log(layer);
     return {
       title: layer.name,
       id: layer.id,
@@ -88,15 +103,16 @@ const generatePopupTemplate = async (url: string, id?: number) => {
         ],
       },
     };
+  } else {
+    return {
+      title: layer.name || layer.mapName,
+      visible: layer.defaultVisibility,
+      id: layer.id,
+      sublayers: await Promise.all(
+        sublayers.map(
+          async (sublayer: any) => await generatePopupTemplate(url, sublayer.id)
+        )
+      ),
+    };
   }
-  return {
-    title: layer.name || layer.mapName,
-    visible: layer.defaultVisibility,
-    id: layer.id,
-    subLayers: await Promise.all(
-      sublayers.map(
-        async (sublayer: any) => await generatePopupTemplate(url, sublayer.id)
-      )
-    ),
-  };
 };
